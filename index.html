@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gate Register — Super Admin</title>
+<style>
+  :root{
+    --bg:#0d1512; --panel:#132019; --panel2:#1a2b22; --border:#2E4A3E;
+    --text:#E7EFE9; --dim:#83A995; --mut:#5C7A6A;
+    --brand:#3ECF8E; --brand2:#2AA76A;
+    --danger:#E94560; --warn:#F5B841;
+    --mono:"SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--bg); color:var(--text); font-family:-apple-system, "Segoe UI", Roboto, sans-serif; font-size:14px; line-height:1.4; min-height:100vh}
+
+  /* login */
+  .login{max-width:340px; margin:80px auto; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:24px}
+  .login h1{font-size:18px; margin-bottom:4px}
+  .login p{color:var(--dim); font-size:12px; margin-bottom:18px}
+  .login input{width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:14px; font-family:var(--mono); margin-bottom:12px}
+  .login input:focus{outline:none; border-color:var(--brand)}
+  .login button{width:100%; padding:10px; background:var(--brand); color:#000; border:none; border-radius:4px; font-weight:600; cursor:pointer}
+  .login .err{color:var(--danger); font-size:12px; margin-top:8px; min-height:16px}
+
+  /* app layout */
+  .app{display:none; min-height:100vh; grid-template-columns:260px 1fr}
+  .app.on{display:grid}
+  @media(max-width:720px){.app{grid-template-columns:1fr}}
+
+  /* sidebar */
+  .sb{background:var(--panel); border-right:1px solid var(--border); padding:14px; display:flex; flex-direction:column; min-height:100vh}
+  .sb .hd{font-size:11px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center}
+  .sb .hd button{background:var(--brand); color:#000; border:none; border-radius:3px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer}
+  .sblist{flex:1; overflow-y:auto; margin-bottom:10px}
+  .socrow{padding:10px 12px; border-radius:4px; cursor:pointer; border:1px solid transparent; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center}
+  .socrow:hover{background:var(--panel2)}
+  .socrow.active{background:var(--panel2); border-color:var(--brand)}
+  .socrow .nm{font-weight:600; font-size:13px}
+  .socrow .cnt{font-size:10px; color:var(--dim); font-family:var(--mono)}
+  .sb .foot{border-top:1px solid var(--border); padding-top:10px; font-size:11px; color:var(--mut); font-family:var(--mono)}
+  .sb .foot button{background:none; border:none; color:var(--dim); cursor:pointer; font-size:11px; padding:2px 0}
+
+  /* main */
+  .main{padding:20px; overflow-y:auto; max-height:100vh}
+  .hdr{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border)}
+  .hdr h2{font-size:20px; font-weight:700}
+  .hdr .sub{color:var(--dim); font-size:12px; margin-top:2px}
+  .hdr .idbadge{font-family:var(--mono); font-size:11px; color:var(--mut); background:var(--panel); padding:3px 8px; border-radius:3px; border:1px solid var(--border)}
+
+  .tabs{display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid var(--border)}
+  .tab{padding:8px 14px; background:none; border:none; color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; font-size:13px; font-weight:500}
+  .tab.active{color:var(--brand); border-bottom-color:var(--brand)}
+  .tab:hover{color:var(--text)}
+
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:14px; margin-bottom:12px}
+  .card h3{font-size:13px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; font-weight:600}
+  .grow{display:grid; gap:8px}
+  .fld{display:grid; grid-template-columns:120px 1fr; gap:10px; align-items:center}
+  .fld label{font-size:12px; color:var(--dim)}
+  .fld input, .fld select, .fld textarea{padding:6px 10px; background:var(--bg); border:1px solid var(--border); border-radius:3px; color:var(--text); font-size:13px; font-family:inherit}
+  .fld input:focus, .fld select:focus, .fld textarea:focus{outline:none; border-color:var(--brand)}
+  .btnrow{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+  .btn{padding:6px 14px; border-radius:3px; border:none; cursor:pointer; font-size:12px; font-weight:600}
+  .btn-p{background:var(--brand); color:#000}
+  .btn-s{background:var(--panel2); color:var(--text); border:1px solid var(--border)}
+  .btn-d{background:var(--danger); color:#fff}
+  .btn-w{background:var(--warn); color:#000}
+  .btn:hover{opacity:.85}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+
+  /* tables */
+  table{width:100%; border-collapse:collapse; font-size:12px}
+  th{text-align:left; padding:8px 10px; color:var(--dim); font-weight:600; text-transform:uppercase; letter-spacing:.05em; font-size:10px; border-bottom:1px solid var(--border)}
+  td{padding:8px 10px; border-bottom:1px solid var(--panel2); vertical-align:top}
+  tr:hover td{background:var(--panel2)}
+  td .btn{padding:3px 8px; font-size:11px}
+  td.mono{font-family:var(--mono); color:var(--dim); font-size:11px}
+  .empty{text-align:center; padding:30px; color:var(--mut); font-size:13px}
+  .badge{display:inline-block; padding:2px 6px; border-radius:2px; font-size:10px; font-weight:600; font-family:var(--mono)}
+  .b-ok{background:rgba(62,207,142,.15); color:var(--brand)}
+  .b-warn{background:rgba(245,184,65,.15); color:var(--warn)}
+  .b-no{background:rgba(233,69,96,.15); color:var(--danger)}
+  .b-mut{background:var(--panel2); color:var(--dim)}
+
+  /* modal */
+  .mod{position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; padding:20px; z-index:100}
+  .mod.on{display:flex}
+  .modbox{background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:20px; max-width:420px; width:100%}
+  .modbox h3{font-size:16px; margin-bottom:6px}
+  .modbox p{color:var(--dim); font-size:13px; margin-bottom:14px}
+  .modbox .fld{margin-bottom:8px}
+
+  /* toast */
+  .toast{position:fixed; bottom:20px; right:20px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:10px 14px; color:var(--text); font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,.4); z-index:200; opacity:0; transform:translateY(20px); transition:all .2s}
+  .toast.on{opacity:1; transform:translateY(0)}
+  .toast.ok{border-color:var(--brand)}
+  .toast.err{border-color:var(--danger)}
+
+  /* utility */
+  .flex{display:flex; gap:8px; align-items:center}
+  .flex-b{display:flex; justify-content:space-between; align-items:center}
+  .grow2{flex-grow:1}
+  .pill{padding:4px 10px; background:var(--panel2); border-radius:12px; font-size:11px; color:var(--dim); font-family:var(--mono)}
+  .rowsm{display:flex; gap:6px; flex-wrap:wrap}
+  h4{font-size:12px; margin:12px 0 6px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login" id="login">
+  <h1>🔐 Gate Register</h1>
+  <p>Super Admin Panel</p>
+  <input type="password" id="pw" placeholder="Password" autocomplete="current-password" />
+  <button id="btn-login">Login</button>
+  <div class="err" id="err"></div>
+</div>
+
+<!-- App shell -->
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <aside class="sb">
+    <div class="hd">
+      <span>Societies</span>
+      <button id="btn-newsoc">+ New</button>
+    </div>
+    <div class="sblist" id="sblist"></div>
+    <div class="foot">
+      <div>Firebase: gate-register-332c5</div>
+      <button id="btn-logout">↪ Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main">
+    <div class="empty">← Left side se society select karo</div>
+  </main>
+</div>
+
+<!-- Modals -->
+<div class="mod" id="mod-newsoc">
+  <div class="modbox">
+    <h3>Nayi Society add karo</h3>
+    <p>Society ID unique hona chahiye (e.g., <code>greenmeadows</code>). Baad mein change nahi ho sakti.</p>
+    <div class="fld"><label>Society ID</label><input id="ns-id" placeholder="e.g., silverpark" /></div>
+    <div class="fld"><label>Naam</label><input id="ns-name" placeholder="e.g., Silver Park Apartments" /></div>
+    <div class="fld"><label>Gate</label><input id="ns-gate" placeholder="e.g., Gate 1" /></div>
+    <div class="btnrow">
+      <button class="btn btn-p" id="ns-save">Create</button>
+      <button class="btn btn-s" id="ns-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="mod" id="mod-newflat">
+  <div class="modbox">
+    <h3>Naya Flat add karo</h3>
+    <p>Manually flat add karo (family khud se bhi karti hai via app).</p>
+    <div class="fld"><label>Tower</label><input id="nf-tower" placeholder="e.g., A" /></div>
+    <div class="fld"><label>Flat</label><input id="nf-flat" placeholder="e.g., A-101 (tower ke saath)" /></div>
+    <div class="btnrow">
+      <button class="btn btn-p" id="nf-save">Create</button>
+      <button class="btn btn-s" id="nf-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="mod" id="mod-newmember">
+  <div class="modbox">
+    <h3>Naya Member add karo</h3>
+    <div class="fld"><label>Naam</label><input id="nm-name" placeholder="e.g., Suresh" /></div>
+    <div class="fld"><label>Role</label><input id="nm-role" placeholder="e.g., Papa / Mummy / Bhai" value="Ghar wale" /></div>
+    <div class="btnrow">
+      <button class="btn btn-p" id="nm-save">Create</button>
+      <button class="btn btn-s" id="nm-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, remove, push, get } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+// Firebase config (same as main app)
+const app = initializeApp({
+  apiKey: "AIzaSyD5GvRbrNTrLjUWtlAisoFnXQPp1rW2Vg0",
+  authDomain: "gate-register-332c5.firebaseapp.com",
+  databaseURL: "https://gate-register-332c5-default-rtdb.firebaseio.com",
+  projectId: "gate-register-332c5",
+  storageBucket: "gate-register-332c5.firebasestorage.app",
+  messagingSenderId: "754517313634",
+  appId: "1:754517313634:web:4d6cb7b3b6c3630235a93b"
+});
+const db = getDatabase(app);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ftime = ms => ms ? new Date(ms).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"numeric", minute:"2-digit", hour12:true}) : "—";
+
+const ADMIN_PW_HASH = "fc35d13437320e5b09652cca5dcd72beb9fd2b878f4daf53b93584c8195f1aa8";
+async function sha256hex(s){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function toast(msg, kind){
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast on " + (kind||"");
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.className = "toast", 2400);
+}
+
+/* ---------- login ---------- */
+$("btn-login").onclick = tryLogin;
+$("pw").addEventListener("keydown", e => { if(e.key === "Enter") tryLogin(); });
+
+async function tryLogin(){
+  if(sessionStorage.getItem("gr_admin") === "1"){
+    $("login").style.display = "none";
+    $("app").classList.add("on");
+    startApp();
+    return;
+  }
+  const pw = $("pw").value;
+  const h = await sha256hex(pw);
+  if(h === ADMIN_PW_HASH){
+    sessionStorage.setItem("gr_admin", "1");
+    $("login").style.display = "none";
+    $("app").classList.add("on");
+    startApp();
+  } else {
+    $("err").textContent = "Galat password";
+  }
+}
+
+if(sessionStorage.getItem("gr_admin") === "1") tryLogin();
+
+$("btn-logout").onclick = () => {
+  sessionStorage.removeItem("gr_admin");
+  location.reload();
+};
+
+/* ---------- state ---------- */
+let allSocieties = {};
+let currentSocId = null;
+let currentTab = "config";
+let currentSocData = {};
+let unsub = null;
+
+/* ---------- app start ---------- */
+function startApp(){
+  // Listen to all societies
+  onValue(ref(db, "societies"), snap => {
+    allSocieties = snap.val() || {};
+    renderSidebar();
+    if(currentSocId && allSocieties[currentSocId]){
+      currentSocData = allSocieties[currentSocId];
+      renderMain();
+    } else if(currentSocId && !allSocieties[currentSocId]){
+      currentSocId = null;
+      currentSocData = {};
+      renderMain();
+    }
+  });
+}
+
+/* ---------- sidebar ---------- */
+function renderSidebar(){
+  const list = $("sblist");
+  const ids = Object.keys(allSocieties);
+  if(!ids.length){
+    list.innerHTML = '<div class="empty" style="padding:20px 6px; font-size:12px">Koi society nahi hai. Upar "+ New" dabao.</div>';
+    return;
+  }
+  list.innerHTML = "";
+  ids.sort().forEach(id => {
+    const s = allSocieties[id] || {};
+    const cfg = s.config || {};
+    const nm = cfg.name || id;
+    const flats = s.flats || {};
+    let flatCount = 0, memberCount = 0;
+    Object.values(flats).forEach(t => {
+      Object.values(t || {}).forEach(f => {
+        flatCount++;
+        memberCount += Object.keys(f.members || {}).length;
+      });
+    });
+    const entries = Object.keys(s.entries || {}).length;
+    const row = document.createElement("div");
+    row.className = "socrow" + (id === currentSocId ? " active" : "");
+    row.innerHTML = `<div><div class="nm">${esc(nm)}</div><div class="cnt">${flatCount} flats · ${memberCount} members · ${entries} entries</div></div>`;
+    row.onclick = () => selectSociety(id);
+    list.appendChild(row);
+  });
+}
+
+function selectSociety(id){
+  currentSocId = id;
+  currentSocData = allSocieties[id] || {};
+  currentTab = "config";
+  renderSidebar();
+  renderMain();
+}
+
+/* ---------- main ---------- */
+function renderMain(){
+  const main = $("main");
+  if(!currentSocId){
+    main.innerHTML = '<div class="empty">← Left side se society select karo</div>';
+    return;
+  }
+  const cfg = currentSocData.config || {};
+  const nm = cfg.name || currentSocId;
+
+  main.innerHTML = `
+    <div class="hdr">
+      <div>
+        <h2>${esc(nm)}</h2>
+        <div class="sub">${esc(cfg.gate || "—")}</div>
+      </div>
+      <span class="idbadge">${esc(currentSocId)}</span>
+    </div>
+    <div class="tabs">
+      <button class="tab ${currentTab==='config'?'active':''}" data-tab="config">Config</button>
+      <button class="tab ${currentTab==='flats'?'active':''}" data-tab="flats">Flats & Members</button>
+      <button class="tab ${currentTab==='entries'?'active':''}" data-tab="entries">Entries</button>
+      <button class="tab ${currentTab==='danger'?'active':''}" data-tab="danger">Danger Zone</button>
+    </div>
+    <div id="tab-body"></div>
+  `;
+  main.querySelectorAll(".tab").forEach(b => b.onclick = () => { currentTab = b.dataset.tab; renderMain(); });
+  renderTab();
+}
+
+function renderTab(){
+  const body = $("tab-body");
+  if(!body) return;
+  if(currentTab === "config") renderConfig(body);
+  if(currentTab === "flats") renderFlats(body);
+  if(currentTab === "entries") renderEntries(body);
+  if(currentTab === "danger") renderDanger(body);
+}
+
+/* ---------- Config tab ---------- */
+function renderConfig(body){
+  const cfg = currentSocData.config || {};
+  body.innerHTML = `
+    <div class="card">
+      <h3>Society Info</h3>
+      <div class="grow">
+        <div class="fld"><label>Naam</label><input id="cf-name" value="${esc(cfg.name||'')}" /></div>
+        <div class="fld"><label>Gate</label><input id="cf-gate" value="${esc(cfg.gate||'')}" /></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-p" id="cf-save">Save</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Stats</h3>
+      <div class="rowsm">
+        <span class="pill">${countFlats()} flats</span>
+        <span class="pill">${countMembers()} members</span>
+        <span class="pill">${countTokens()} FCM tokens</span>
+        <span class="pill">${Object.keys(currentSocData.entries||{}).length} entries</span>
+      </div>
+    </div>
+  `;
+  $("cf-save").onclick = async () => {
+    const name = $("cf-name").value.trim();
+    const gate = $("cf-gate").value.trim();
+    try{
+      await set(ref(db, `societies/${currentSocId}/config`), { name, gate, towers: (cfg.towers||[]) });
+      toast("Config save ho gaya", "ok");
+    }catch(err){ toast("Fail: "+err.message, "err"); }
+  };
+}
+
+function countFlats(){
+  let n = 0;
+  Object.values(currentSocData.flats||{}).forEach(t => n += Object.keys(t||{}).length);
+  return n;
+}
+function countMembers(){
+  let n = 0;
+  Object.values(currentSocData.flats||{}).forEach(t => Object.values(t||{}).forEach(f => n += Object.keys(f.members||{}).length));
+  return n;
+}
+function countTokens(){
+  let n = 0;
+  Object.values(currentSocData.flats||{}).forEach(t => Object.values(t||{}).forEach(f => {
+    Object.values(f.members||{}).forEach(m => { if(m && m.fcmToken) n++; });
+  }));
+  return n;
+}
+
+/* ---------- Flats tab ---------- */
+function renderFlats(body){
+  const flats = currentSocData.flats || {};
+  const towers = Object.keys(flats).sort();
+  let html = `
+    <div class="card">
+      <div class="flex-b" style="margin-bottom:10px">
+        <h3 style="margin:0">Towers & Flats</h3>
+        <button class="btn btn-p" id="btn-addflat">+ Flat add</button>
+      </div>
+      ${towers.length===0 ? '<div class="empty">Koi flat register nahi hua. Family app se register hoga ya "+ Flat add" se manually.</div>' : ''}
+  `;
+  towers.forEach(tower => {
+    const tflats = flats[tower] || {};
+    const flatList = Object.keys(tflats).sort();
+    html += `<h4>Tower ${esc(tower)} <span class="pill" style="margin-left:6px">${flatList.length} flats</span></h4>`;
+    html += `<table><thead><tr><th>Flat</th><th>Members</th><th>FCM tokens</th><th>Action</th></tr></thead><tbody>`;
+    flatList.forEach(f => {
+      const node = tflats[f] || {};
+      const members = node.members || {};
+      const mList = Object.entries(members);
+      const tokens = mList.filter(([_,m])=>m&&m.fcmToken).length;
+      let mHtml = '';
+      mList.forEach(([mid, m]) => {
+        if(!m) return;
+        const tok = m.fcmToken ? '<span class="badge b-ok">TOKEN</span>' : '<span class="badge b-mut">no token</span>';
+        mHtml += `<div class="flex" style="padding:4px 0; border-top:1px dashed var(--panel2)">
+          <span class="grow2"><b>${esc(m.name||'?')}</b> <span style="color:var(--mut)">· ${esc(m.role||'')}</span> ${tok}</span>
+          <button class="btn btn-d" data-del-mem="${esc(tower)}|${esc(f)}|${esc(mid)}">Del</button>
+        </div>`;
+      });
+      html += `<tr>
+        <td><b>${esc(f)}</b></td>
+        <td>${mList.length===0 ? '<i style="color:var(--mut)">koi member nahi</i>' : mHtml}</td>
+        <td class="mono">${tokens}</td>
+        <td>
+          <button class="btn btn-s" data-add-mem="${esc(tower)}|${esc(f)}">+ Member</button>
+          <button class="btn btn-d" data-del-flat="${esc(tower)}|${esc(f)}">Del Flat</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  });
+  html += `</div>`;
+  body.innerHTML = html;
+
+  $("btn-addflat").onclick = openNewFlat;
+  body.querySelectorAll("[data-add-mem]").forEach(b => b.onclick = () => {
+    const [t, f] = b.dataset.addMem.split("|");
+    openNewMember(t, f);
+  });
+  body.querySelectorAll("[data-del-mem]").forEach(b => b.onclick = () => {
+    const [t, f, m] = b.dataset.delMem.split("|");
+    if(!confirm(`Member delete? Yeh action wapas nahi hoga.`)) return;
+    remove(ref(db, `societies/${currentSocId}/flats/${t}/${f}/members/${m}`))
+      .then(()=>toast("Member delete ho gaya","ok"))
+      .catch(e=>toast("Fail: "+e.message,"err"));
+  });
+  body.querySelectorAll("[data-del-flat]").forEach(b => b.onclick = () => {
+    const [t, f] = b.dataset.delFlat.split("|");
+    if(!confirm(`Flat ${f} pura delete (sab members + tokens ke saath)? Wapas nahi hoga.`)) return;
+    remove(ref(db, `societies/${currentSocId}/flats/${t}/${f}`))
+      .then(()=>toast("Flat delete ho gaya","ok"))
+      .catch(e=>toast("Fail: "+e.message,"err"));
+  });
+}
+
+/* ---------- Entries tab ---------- */
+function renderEntries(body){
+  const entries = currentSocData.entries || {};
+  const arr = Object.entries(entries).map(([k,v])=>({...v, _key:k})).sort((a,b)=>(b.at||0)-(a.at||0));
+  let html = `<div class="card">
+    <div class="flex-b" style="margin-bottom:10px">
+      <h3 style="margin:0">Entries (${arr.length})</h3>
+      <button class="btn btn-w" id="btn-clear-old">Purani (7 din+) clear karo</button>
+    </div>`;
+  if(!arr.length){
+    html += '<div class="empty">Koi entry nahi.</div>';
+  } else {
+    html += `<table><thead><tr><th>Time</th><th>Visitor</th><th>Flat</th><th>Status</th><th>Decided By</th><th>Action</th></tr></thead><tbody>`;
+    arr.slice(0, 200).forEach(e => {
+      const sBadge = {waiting:'b-warn', in:'b-ok', out:'b-mut', denied:'b-no', gate:'b-warn'}[e.status] || 'b-mut';
+      html += `<tr>
+        <td class="mono">${esc(ftime(e.at))}</td>
+        <td><b>${esc(e.name||'?')}</b><br><small style="color:var(--mut)">${esc(e.company||'')} ${e.phone?'· '+esc(e.phone):''}</small></td>
+        <td class="mono">${esc(e.flat||'?')}</td>
+        <td><span class="badge ${sBadge}">${esc(e.status||'?')}</span></td>
+        <td>${esc(e.decidedBy||'—')}</td>
+        <td><button class="btn btn-d" data-del-entry="${esc(e._key)}">Del</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    if(arr.length > 200) html += `<div style="text-align:center; padding:10px; color:var(--mut); font-size:12px">Latest 200 dikha rahe hain (total ${arr.length})</div>`;
+  }
+  html += `</div>`;
+  body.innerHTML = html;
+
+  body.querySelectorAll("[data-del-entry]").forEach(b => b.onclick = () => {
+    const key = b.dataset.delEntry;
+    if(!confirm("Entry delete karni hai?")) return;
+    remove(ref(db, `societies/${currentSocId}/entries/${key}`))
+      .then(()=>toast("Entry delete","ok"))
+      .catch(e=>toast("Fail: "+e.message,"err"));
+  });
+  $("btn-clear-old").onclick = async () => {
+    const cutoff = Date.now() - 7*24*3600*1000;
+    const old = arr.filter(e => (e.at||0) < cutoff && e.status !== "waiting");
+    if(!old.length) return toast("Koi purani entry nahi", "ok");
+    if(!confirm(`${old.length} purani entries delete honi hain. Confirm?`)) return;
+    try{
+      const updates = {};
+      old.forEach(e => { updates[`societies/${currentSocId}/entries/${e._key}`] = null; });
+      await update(ref(db), updates);
+      toast(`${old.length} entries delete`, "ok");
+    }catch(err){ toast("Fail: "+err.message, "err"); }
+  };
+}
+
+/* ---------- Danger tab ---------- */
+function renderDanger(body){
+  body.innerHTML = `
+    <div class="card">
+      <h3 style="color:var(--danger)">⚠ Danger Zone</h3>
+      <p style="color:var(--dim); margin-bottom:12px">Yeh actions wapas nahi ho sakte. Sochh ke karo.</p>
+      <div class="btnrow">
+        <button class="btn btn-w" id="btn-wipe-entries">Sab entries wipe karo</button>
+        <button class="btn btn-w" id="btn-wipe-flats">Sab flats + members wipe karo</button>
+        <button class="btn btn-d" id="btn-del-soc">Poori society DELETE karo</button>
+      </div>
+    </div>
+  `;
+  $("btn-wipe-entries").onclick = async () => {
+    if(!confirm("Society ki SAB entries delete? (waiting bhi)")) return;
+    try{
+      await remove(ref(db, `societies/${currentSocId}/entries`));
+      toast("Entries wipe","ok");
+    }catch(e){ toast("Fail: "+e.message,"err"); }
+  };
+  $("btn-wipe-flats").onclick = async () => {
+    if(!confirm("Society ke SAB flats + members + tokens delete? Family app re-register karni padegi.")) return;
+    try{
+      await remove(ref(db, `societies/${currentSocId}/flats`));
+      toast("Flats wipe","ok");
+    }catch(e){ toast("Fail: "+e.message,"err"); }
+  };
+  $("btn-del-soc").onclick = async () => {
+    const name = (currentSocData.config||{}).name || currentSocId;
+    if(!confirm(`"${name}" society POORI DELETE (config + flats + members + entries)?`)) return;
+    if(!confirm("Sach mein? Yeh wapas nahi hoga.")) return;
+    try{
+      await remove(ref(db, `societies/${currentSocId}`));
+      currentSocId = null; currentSocData = {};
+      toast("Society delete","ok");
+    }catch(e){ toast("Fail: "+e.message,"err"); }
+  };
+}
+
+/* ---------- Modals ---------- */
+function openMod(id){ $(id).classList.add("on"); }
+function closeMod(id){ $(id).classList.remove("on"); }
+
+$("btn-newsoc").onclick = () => {
+  $("ns-id").value = ""; $("ns-name").value = ""; $("ns-gate").value = "Gate 1";
+  openMod("mod-newsoc");
+  setTimeout(()=>$("ns-id").focus(), 50);
+};
+$("ns-cancel").onclick = () => closeMod("mod-newsoc");
+$("ns-save").onclick = async () => {
+  const id = $("ns-id").value.trim().toLowerCase().replace(/[^a-z0-9-]/g,"");
+  const name = $("ns-name").value.trim();
+  const gate = $("ns-gate").value.trim() || "Gate 1";
+  if(!id || !name) return toast("ID aur Naam zaruri hain","err");
+  if(allSocieties[id]) return toast("Yeh ID pehle se hai","err");
+  try{
+    await set(ref(db, `societies/${id}/config`), { name, gate, towers: [] });
+    closeMod("mod-newsoc");
+    toast("Society create ho gayi","ok");
+    selectSociety(id);
+  }catch(e){ toast("Fail: "+e.message,"err"); }
+};
+
+function openNewFlat(){
+  $("nf-tower").value = ""; $("nf-flat").value = "";
+  openMod("mod-newflat");
+  setTimeout(()=>$("nf-tower").focus(), 50);
+}
+$("nf-cancel").onclick = () => closeMod("mod-newflat");
+$("nf-save").onclick = async () => {
+  const tower = $("nf-tower").value.trim().toUpperCase();
+  let flat = $("nf-flat").value.trim().toUpperCase();
+  if(!tower || !flat) return toast("Tower aur Flat zaruri hain","err");
+  if(!flat.startsWith(tower)) flat = tower + "-" + flat.replace(/^-+/, "");
+  try{
+    await set(ref(db, `societies/${currentSocId}/flats/${tower}/${flat}`), { createdAt: Date.now(), members: {} });
+    closeMod("mod-newflat");
+    toast("Flat create","ok");
+  }catch(e){ toast("Fail: "+e.message,"err"); }
+};
+
+let pendingMember = null;
+function openNewMember(tower, flat){
+  pendingMember = { tower, flat };
+  $("nm-name").value = ""; $("nm-role").value = "Ghar wale";
+  openMod("mod-newmember");
+  setTimeout(()=>$("nm-name").focus(), 50);
+}
+$("nm-cancel").onclick = () => closeMod("mod-newmember");
+$("nm-save").onclick = async () => {
+  const name = $("nm-name").value.trim();
+  const role = $("nm-role").value.trim() || "Ghar wale";
+  if(!name || !pendingMember) return toast("Naam zaruri hai","err");
+  const mid = "m" + Date.now();
+  try{
+    await set(ref(db, `societies/${currentSocId}/flats/${pendingMember.tower}/${pendingMember.flat}/members/${mid}`),
+      { name, role, addedAt: Date.now() });
+    closeMod("mod-newmember");
+    pendingMember = null;
+    toast("Member add","ok");
+  }catch(e){ toast("Fail: "+e.message,"err"); }
+};
+
+// Click outside modal to close
+document.querySelectorAll(".mod").forEach(m => m.addEventListener("click", e => { if(e.target === m) m.classList.remove("on"); }));
+</script>
+</body>
+</html>
