@@ -349,6 +349,7 @@ function renderTab(){
 /* ---------- Config tab ---------- */
 function renderConfig(body){
   const cfg = currentSocData.config || {};
+  const hasPin = !!(cfg.pinHash);
   body.innerHTML = `
     <div class="card">
       <h3>Society Info</h3>
@@ -358,6 +359,17 @@ function renderConfig(body){
       </div>
       <div class="btnrow">
         <button class="btn btn-p" id="cf-save">Save</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Society PIN ${hasPin ? '<span class="badge b-ok">SET</span>' : '<span class="badge b-mut">NOT SET</span>'}</h3>
+      <div style="font-size:12px; color:var(--mut); margin-bottom:10px">Admin sirf apni marzi se PIN reset kar sakta hai — purani PIN nahi chahiye. Set karne ke baad sab residents ko naya PIN batao.</div>
+      <div class="grow">
+        <div class="fld"><label>Nayi PIN (min 4 chars)</label><input id="cf-newpin" type="text" placeholder="jaise 4826" maxlength="20" autocomplete="off" /></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-p" id="cf-savepin">${hasPin ? 'PIN change karo' : 'PIN set karo'}</button>
+        ${hasPin ? '<button class="btn btn-d" id="cf-clearpin">PIN hatao</button>' : ''}
       </div>
     </div>
     <div class="card">
@@ -374,8 +386,30 @@ function renderConfig(body){
     const name = $("cf-name").value.trim();
     const gate = $("cf-gate").value.trim();
     try{
-      await set(ref(db, `societies/${currentSocId}/config`), { name, gate, towers: (cfg.towers||[]) });
+      // Preserve pinHash — set() replaces whole node
+      const payload = { name, gate, towers: (cfg.towers||[]) };
+      if(cfg.pinHash) payload.pinHash = cfg.pinHash;
+      await set(ref(db, `societies/${currentSocId}/config`), payload);
       toast("Config save ho gaya", "ok");
+    }catch(err){ toast("Fail: "+err.message, "err"); }
+  };
+  $("cf-savepin").onclick = async () => {
+    const pin = $("cf-newpin").value.trim();
+    if(pin.length < 4){ toast("PIN kam se kam 4 chars ka do", "err"); return; }
+    if(!confirm(`Society "${cfg.name||currentSocId}" ki PIN ${hasPin?'change':'set'} karo?\n\nSab residents ko naya PIN batana padega.`)) return;
+    try{
+      const hex = await sha256hex(currentSocId + ":" + pin);
+      await set(ref(db, `societies/${currentSocId}/config/pinHash`), hex);
+      $("cf-newpin").value = "";
+      toast("PIN save ho gaya", "ok");
+    }catch(err){ toast("Fail: "+err.message, "err"); }
+  };
+  const clr = $("cf-clearpin");
+  if(clr) clr.onclick = async () => {
+    if(!confirm(`PIN hata do?\n\nKoi bhi phone se society open ho jayegi (sirf tab jab picker mein legacy list ON ho). Recommended: PIN rehne do.`)) return;
+    try{
+      await remove(ref(db, `societies/${currentSocId}/config/pinHash`));
+      toast("PIN hata diya", "ok");
     }catch(err){ toast("Fail: "+err.message, "err"); }
   };
 }
