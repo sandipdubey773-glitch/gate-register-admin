@@ -129,6 +129,7 @@
     <div class="sblist" id="sblist"></div>
     <div class="foot">
       <div>Firebase: gate-register-332c5</div>
+      <button id="btn-changepw" style="margin-bottom:6px">🔑 Change PW</button>
       <button id="btn-logout">↪ Logout</button>
     </div>
   </aside>
@@ -167,6 +168,21 @@
   </div>
 </div>
 
+<div class="mod" id="mod-changepw">
+  <div class="modbox">
+    <h3>Admin Password change karo</h3>
+    <p>Nayi password sabhi admin logins ke liye kaam karegi. Purani password verify hogi pehle.</p>
+    <div class="fld"><label>Purani password</label><input id="cp-old" type="password" placeholder="Current password" /></div>
+    <div class="fld"><label>Nayi password (min 4 chars)</label><input id="cp-new" type="password" placeholder="New password" /></div>
+    <div class="fld"><label>Nayi password dobara</label><input id="cp-new2" type="password" placeholder="Confirm new password" /></div>
+    <div id="cp-msg" style="font-size:12px; margin:6px 0; min-height:16px"></div>
+    <div class="btnrow">
+      <button class="btn btn-p" id="cp-save">Change password</button>
+      <button class="btn btn-s" id="cp-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="mod" id="mod-newmember">
   <div class="modbox">
     <h3>Naya Member add karo</h3>
@@ -201,10 +217,18 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ftime = ms => ms ? new Date(ms).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"numeric", minute:"2-digit", hour12:true}) : "—";
 
-const ADMIN_PW_HASH = "fc35d13437320e5b09652cca5dcd72beb9fd2b878f4daf53b93584c8195f1aa8";
+// Default password: 0619. User can change via Change PW button — new hash stored in Firebase at adminConfig/pwHash
+const ADMIN_PW_HASH_DEFAULT = "35ba07a494bf6de044e069def0a43f2866cd0412f14935f055eef23567c3d94a";
 async function sha256hex(s){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function getActivePwHash(){
+  try{
+    const snap = await get(ref(db, "adminConfig/pwHash"));
+    const v = snap.val();
+    return v || ADMIN_PW_HASH_DEFAULT;
+  }catch(_){ return ADMIN_PW_HASH_DEFAULT; }
 }
 
 function toast(msg, kind){
@@ -228,7 +252,8 @@ async function tryLogin(){
   }
   const pw = $("pw").value;
   const h = await sha256hex(pw);
-  if(h === ADMIN_PW_HASH){
+  const active = await getActivePwHash();
+  if(h === active){
     sessionStorage.setItem("gr_admin", "1");
     $("login").style.display = "none";
     $("app").classList.add("on");
@@ -243,6 +268,36 @@ if(sessionStorage.getItem("gr_admin") === "1") tryLogin();
 $("btn-logout").onclick = () => {
   sessionStorage.removeItem("gr_admin");
   location.reload();
+};
+
+/* ---------- change admin password ---------- */
+$("btn-changepw").onclick = () => {
+  $("cp-old").value = ""; $("cp-new").value = ""; $("cp-new2").value = "";
+  $("cp-msg").textContent = ""; $("cp-msg").style.color = "";
+  $("mod-changepw").classList.add("on");
+  $("cp-old").focus();
+};
+$("cp-cancel").onclick = () => $("mod-changepw").classList.remove("on");
+$("cp-save").onclick = async () => {
+  const oldPw = $("cp-old").value;
+  const newPw = $("cp-new").value;
+  const newPw2 = $("cp-new2").value;
+  const msg = $("cp-msg");
+  if(!oldPw){ msg.textContent = "Purani password daalo"; msg.style.color = "#f87171"; return; }
+  if(newPw.length < 4){ msg.textContent = "Nayi password min 4 chars"; msg.style.color = "#f87171"; return; }
+  if(newPw !== newPw2){ msg.textContent = "Dono nayi passwords match nahi ho rahi"; msg.style.color = "#f87171"; return; }
+  if(oldPw === newPw){ msg.textContent = "Purani aur nayi password alag honi chahiye"; msg.style.color = "#f87171"; return; }
+  msg.textContent = "Verify ho raha…"; msg.style.color = "#94a3b8";
+  try{
+    const oldH = await sha256hex(oldPw);
+    const active = await getActivePwHash();
+    if(oldH !== active){ msg.textContent = "Purani password galat hai"; msg.style.color = "#f87171"; return; }
+    const newH = await sha256hex(newPw);
+    await set(ref(db, "adminConfig/pwHash"), newH);
+    msg.textContent = "✅ Password change ho gaya"; msg.style.color = "#4ade80";
+    setTimeout(() => $("mod-changepw").classList.remove("on"), 1200);
+    toast("Admin password change ho gaya", "ok");
+  }catch(err){ msg.textContent = "Fail: "+err.message; msg.style.color = "#f87171"; }
 };
 
 /* ---------- state ---------- */
