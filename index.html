@@ -384,6 +384,7 @@ function renderMain(){
       <button class="tab ${currentTab==='config'?'active':''}" data-tab="config">Config</button>
       <button class="tab ${currentTab==='flats'?'active':''}" data-tab="flats">Flats & Members</button>
       <button class="tab ${currentTab==='entries'?'active':''}" data-tab="entries">Entries</button>
+      <button class="tab ${currentTab==='bcast'?'active':''}" data-tab="bcast">📢 Broadcast</button>
       <button class="tab ${currentTab==='danger'?'active':''}" data-tab="danger">Danger Zone</button>
     </div>
     <div id="tab-body"></div>
@@ -398,7 +399,90 @@ function renderTab(){
   if(currentTab === "config") renderConfig(body);
   if(currentTab === "flats") renderFlats(body);
   if(currentTab === "entries") renderEntries(body);
+  if(currentTab === "bcast") renderBcast(body);
   if(currentTab === "danger") renderDanger(body);
+}
+
+/* ---------- Broadcast tab ---------- */
+async function renderBcast(body){
+  const flats = currentSocData.flats || {};
+  const towers = Object.keys(flats).sort();
+  const bsnap = currentSocData.broadcasts || {};
+  const arr = Object.entries(bsnap).map(([id,b])=>({id,...b})).sort((a,b)=>(b.sentAt||0)-(a.sentAt||0));
+  body.innerHTML = `
+    <div class="card">
+      <h3>Naya broadcast bhejo</h3>
+      <div class="row"><label>Type</label>
+        <select id="bc-kind">
+          <option value="notice">📢 Notice (push notification + card)</option>
+          <option value="ad">💰 Ad (banner only, no push)</option>
+        </select>
+      </div>
+      <div class="row"><label>Target</label>
+        <select id="bc-target">
+          <option value="all">Sab members</option>
+          <option value="owners">Sirf head member (har flat ka pehla)</option>
+          ${towers.map(t=>`<option value="${esc(t)}">Sirf Tower ${esc(t)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="row"><label>Title</label><input id="bc-title" placeholder="Jaise: Water off tomorrow 10-12" maxlength="80" /></div>
+      <div class="row"><label>Message</label><textarea id="bc-body" rows="4" placeholder="Poori detail…" maxlength="600"></textarea></div>
+      <div class="row"><label>Image/Video (optional)</label><input type="file" id="bc-file" accept="image/*,video/mp4,video/webm" /></div>
+      <div class="row"><label></label><span class="hint" id="bc-size">Max 200KB image; video ke liye Firebase Storage chalu karo</span></div>
+      <div class="row"><label></label><button class="btn primary" id="bc-send">📤 Bhejo</button></div>
+      <div class="err" id="bc-err"></div>
+    </div>
+    <div class="card">
+      <h3>Recent broadcasts (${arr.length})</h3>
+      ${arr.length ? arr.map(b => {
+        const when = new Date(b.sentAt||0).toLocaleString();
+        const target = b.target === "all" ? "Sab" : (b.target === "owners" ? "Owners" : "Tower "+b.target);
+        return `<div class="row" style="border-bottom:1px solid #eee; padding:8px 0">
+          <div style="flex:1"><b>${b.kind==="ad"?"💰":"📢"} ${esc(b.title||"")}</b><br>
+            <small style="color:#666">${target} · ${when} · by ${esc(b.by||"admin")}</small><br>
+            <span style="color:#334">${esc((b.body||"").slice(0,120))}${(b.body||"").length>120?"…":""}</span>
+          </div>
+          <button class="btn danger" data-bdel="${esc(b.id)}">🗑 Delete</button>
+        </div>`;
+      }).join("") : '<div class="hint">Abhi tak koi broadcast nahi bheja</div>'}
+    </div>
+  `;
+  let fileData = null;
+  $("bc-file").onchange = async ev => {
+    const f = ev.target.files[0];
+    $("bc-size").textContent = "";
+    if(!f){ fileData = null; return; }
+    if(f.size > 300*1024){
+      $("bc-size").textContent = "⚠ File "+Math.round(f.size/1024)+"KB — RTDB mein 200KB tak safe hai. Compress karo.";
+    }
+    const rd = new FileReader();
+    rd.onload = () => { fileData = rd.result; $("bc-size").textContent = "✓ Loaded: "+Math.round(f.size/1024)+"KB"; };
+    rd.readAsDataURL(f);
+  };
+  $("bc-send").onclick = async () => {
+    const kind = $("bc-kind").value;
+    const target = $("bc-target").value;
+    const title = $("bc-title").value.trim();
+    const bd = $("bc-body").value.trim();
+    if(!title){ $("bc-err").textContent = "Title likho"; return; }
+    if(kind === "notice" && !bd){ $("bc-err").textContent = "Notice ka message likho"; return; }
+    $("bc-send").disabled = true;
+    const id = "b_" + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    const payload = { kind, title, body: bd, imgUrl: fileData || "", target, sentAt: Date.now(), by: "admin" };
+    try{
+      await set(ref(db, `societies/${currentSocId}/broadcasts/${id}`), payload);
+      $("bc-title").value=""; $("bc-body").value=""; $("bc-file").value=""; fileData=null;
+      toast("✓ Broadcast bhej diya");
+      // onValue will auto-refresh currentSocData; re-render tab shortly
+      setTimeout(()=>renderTab(), 400);
+    }catch(e){ $("bc-err").textContent = "Fail: "+(e.message||e); }
+    $("bc-send").disabled = false;
+  };
+  body.querySelectorAll("[data-bdel]").forEach(btn => btn.onclick = async () => {
+    if(!confirm("Ye broadcast delete kare?")) return;
+    await remove(ref(db, `societies/${currentSocId}/broadcasts/${btn.dataset.bdel}`));
+    setTimeout(()=>renderTab(), 400);
+  });
 }
 
 /* ---------- Config tab ---------- */
@@ -428,6 +512,12 @@ function renderConfig(body){
       </div>
     </div>
     <div class="card">
+      <h3>🏛 Tower Secretaries</h3>
+      <div style="font-size:12px; color:var(--mut); margin-bottom:10px">Har tower ka apna secretary — wo apne tower ko invite link aur notice bhej sakta hai (advertisement nahi). Committee badle to ek tap mein hatao.</div>
+      <div id="sec-list"></div>
+      <div id="sec-form"></div>
+    </div>
+    <div class="card">
       <h3>Stats</h3>
       <div class="rowsm">
         <span class="pill">${countFlats()} flats</span>
@@ -437,6 +527,8 @@ function renderConfig(body){
       </div>
     </div>
   `;
+  // Tower secretaries render
+  renderSecretariesList();
   $("cf-save").onclick = async () => {
     const name = $("cf-name").value.trim();
     const gate = $("cf-gate").value.trim();
@@ -467,6 +559,86 @@ function renderConfig(body){
       toast("PIN hata diya", "ok");
     }catch(err){ toast("Fail: "+err.message, "err"); }
   };
+}
+
+/* v2.18 F6 — Tower secretaries card */
+function renderSecretariesList(){
+  const secs = currentSocData.secretaries || {};
+  const cfg = currentSocData.config || {};
+  const flats = currentSocData.flats || {};
+  const towers = new Set([...(cfg.towers||[]).map(t=>t.name || t), ...Object.keys(flats)]);
+  const list = [...towers].filter(Boolean).sort();
+  const box = $("sec-list");
+  if(!box) return;
+  if(!list.length){ box.innerHTML = '<div style="font-size:12px; color:var(--mut)">Koi tower registered nahi hai — pehle Config mein tower add karo ya family app se register hone do.</div>'; return; }
+  let html = "";
+  list.forEach(tw => {
+    const s = secs[tw];
+    html += `<div class="flex" style="padding:8px 0; border-bottom:1px solid var(--panel2); align-items:center">
+      <div style="flex:1">
+        <b>Tower ${esc(tw)}</b>
+        <div style="font-size:12px; color:${s?'var(--dim)':'var(--mut)'}; margin-top:2px">${s ? esc(s.name)+' · '+esc(s.phone||'—')+(s.memberId?' ':' <span style="color:var(--warn)">(app login pending)</span>') : 'Koi secretary set nahi'}</div>
+      </div>
+      ${s
+        ? `<button class="btn btn-d" data-secrm="${esc(tw)}">Hatao</button>`
+        : `<button class="btn btn-p" data-secadd="${esc(tw)}">+ Set karo</button>`}
+    </div>`;
+  });
+  box.innerHTML = html;
+  box.querySelectorAll("[data-secrm]").forEach(b => b.onclick = async () => {
+    const tw = b.dataset.secrm;
+    if(!confirm(`Tower ${tw} ka secretary hatao?`)) return;
+    try{
+      await remove(ref(db, `societies/${currentSocId}/secretaries/${tw}`));
+      // Also revoke any active tower invites for this tower
+      const invs = currentSocData.towerInvites || {};
+      for(const [c, i] of Object.entries(invs)){
+        if(i && i.tower === tw){ await remove(ref(db, `societies/${currentSocId}/towerInvites/${c}`)); }
+      }
+      toast("Secretary hata diya", "ok");
+      setTimeout(()=>renderTab(), 300);
+    }catch(e){ toast("Fail: "+e.message, "err"); }
+  });
+  box.querySelectorAll("[data-secadd]").forEach(b => b.onclick = () => {
+    const tw = b.dataset.secadd;
+    $("sec-form").innerHTML = `<div style="border-top:1px solid var(--border); margin-top:12px; padding-top:12px">
+      <b>Tower ${esc(tw)} ka secretary set karo</b>
+      <div class="fld" style="margin-top:8px"><label>Naam</label><input id="sec-nm" placeholder="Suresh Kumar" /></div>
+      <div class="fld"><label>WhatsApp (10 digit)</label><input id="sec-ph" inputmode="numeric" maxlength="10" placeholder="98765 43210" /></div>
+      <div class="btnrow" style="margin-top:8px">
+        <button class="btn btn-p" id="sec-save">📲 Set karo + WhatsApp link bhejo</button>
+        <button class="btn" id="sec-cancel">Cancel</button>
+      </div>
+      <div class="err" id="sec-err"></div>
+    </div>`;
+    $("sec-ph").oninput = e => { e.target.value = e.target.value.replace(/\D/g,"").slice(0,10); };
+    $("sec-cancel").onclick = () => { $("sec-form").innerHTML = ""; };
+    $("sec-save").onclick = async () => {
+      const nm = $("sec-nm").value.trim();
+      const ph = $("sec-ph").value.trim();
+      if(!nm || ph.length !== 10){ $("sec-err").textContent = "Naam aur 10-digit number dono chahiye"; return; }
+      const socName = (currentSocData.config||{}).name || currentSocId;
+      $("sec-save").disabled = true;
+      try{
+        await set(ref(db, `societies/${currentSocId}/secretaries/${tw}`), {
+          name: nm, phone: "+91 "+ph, memberId: null, setAt: Date.now()
+        });
+        // Auto-create a tower invite
+        const code = "t"+tw.toLowerCase()+Date.now().toString(36).slice(-5);
+        await set(ref(db, `societies/${currentSocId}/towerInvites/${code}`), {
+          tower: tw, active: true, createdBy: "admin", createdAt: Date.now()
+        });
+        const link = "https://gate-register.app/t/"+currentSocId+"/"+code;
+        const msg = `Namaste ${nm} ji! 🙏\n\nAapko *${socName}* ke Tower ${tw} ka secretary banaya gaya hai — Gate Register app mein.\n\nAap kar sakte ho:\n• Apne tower ke sab flat holders ko ek link se jodna\n• Apne tower ko notice bhejna\n\nApp kholo, apna flat register karo — aapko '🏛 Tower' tab mil jayega.\n\nTower invite link (residents ke liye):\n${link}`;
+        const url = "https://wa.me/91"+ph+"?text="+encodeURIComponent(msg);
+        try{ window.open(url, "_blank"); }catch(_){}
+        try{ navigator.clipboard.writeText(msg); }catch(_){}
+        toast("Tower "+tw+" ka secretary set — WhatsApp par link gaya", "ok");
+        $("sec-form").innerHTML = "";
+        setTimeout(()=>renderTab(), 400);
+      }catch(e){ $("sec-err").textContent = "Fail: "+e.message; $("sec-save").disabled = false; }
+    };
+  });
 }
 
 function countFlats(){
