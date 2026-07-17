@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terms of Service — Gate Register</title>
+<style>
+  :root{--bg:#F1F5F9;--card:#fff;--ink:#0f172a;--mut:#64748b;--brand:#6366f1;--line:#e2e8f0}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+  .wrap{max-width:780px;margin:0 auto;padding:32px 22px 80px}
+  .card{background:var(--card);border-radius:16px;padding:28px 26px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+  h1{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
+  h2{margin:24px 0 8px;font-size:17px;color:var(--brand)}
+  .meta{color:var(--mut);font-size:13px;margin-bottom:22px}
+  ol{padding-left:22px}
+  li{margin:10px 0}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .lang{display:flex;gap:8px;margin-bottom:18px}
+  .lang button{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+  .lang button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  [data-lang]{display:none}
+  [data-lang].on{display:block}
+  .foot{margin-top:36px;color:var(--mut);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Terms of Service — Gate Register</h1>
+    <div class="meta">Last updated: 2026-07-16</div>
+
+    <div class="lang">
+      <button id="btn-hi" class="active" onclick="pick('hi')">हिंदी / Hinglish</button>
+      <button id="btn-en" onclick="pick('en')">English</button>
+    </div>
+
+    <div data-lang="hi" class="on">
+      <ol>
+        <li><b>Seva:</b> Gate Register housing societies ke liye visitor management app hai. App "jaisi hai waisi" (as-is) di jaati hai.</li>
+        <li><b>Account:</b> Flat members apne asli naam aur flat se register karenge. Galat flat claim karna ya kisi aur ke naam se judna mana hai; society secretary/admin aise account hata sakte hain.</li>
+        <li><b>Sahi upyog:</b> App ka upyog sirf society suraksha ke liye karein. Visitor photos ka durupyog (share karna, harass karna) mana hai.</li>
+        <li><b>Guards:</b> Guard device society ki property/zimmedari hai. Guard ko residents ka personal data nahi dikhta aur wo iski maang nahi karega.</li>
+        <li><b>Notices aur Ads:</b> Society notices secretary/admin bhejte hain. Advertisements app admin dwara moderate hote hain. Aapatti ho to <a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a> par likhein.</li>
+        <li><b>Zimmedari ki seema:</b> App suchna pahunchane ka madhyam hai; society ki suraksha vyavastha ki antim zimmedari society ki hai. Technical kharabi (network, device) se hui chook ke liye app zimmedar nahi hai.</li>
+        <li><b>Band karna:</b> Aap kabhi bhi app chhod sakte hain aur data delete karwa sakte hain. Niyam todne par admin access band kar sakta hai.</li>
+        <li><b>Kanoon:</b> Ye terms Bharat ke kanoon ke adheen hain. Vivaad ki sthiti mein Bharat ke nyayalay ka adhikar kshetra lagu hoga.</li>
+      </ol>
+      <p style="margin-top:20px"><b>Sampark:</b> <a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a></p>
+    </div>
+
+    <div data-lang="en">
+      <ol>
+        <li><b>Service:</b> Gate Register is a visitor management application for housing societies. The app is provided "as-is".</li>
+        <li><b>Accounts:</b> Flat members must register using their real name and flat. Falsely claiming a flat or registering under another person's name is not allowed; society secretaries/admins may remove such accounts.</li>
+        <li><b>Acceptable use:</b> Use the app only for society security purposes. Misuse of visitor photos (sharing, harassment) is prohibited.</li>
+        <li><b>Guards:</b> The guard device is society property/responsibility. Guards cannot see residents' personal data and must not request it.</li>
+        <li><b>Notices and Ads:</b> Society notices are sent by secretaries/admins. Advertisements are moderated by the app admin. For complaints, write to <a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a>.</li>
+        <li><b>Limitation of liability:</b> The app is a communication medium; ultimate responsibility for society security rests with the society. The app is not liable for lapses caused by technical faults (network, device).</li>
+        <li><b>Termination:</b> You may leave the app at any time and have your data deleted. Admin access may be revoked for terms violations.</li>
+        <li><b>Governing law:</b> These terms are governed by the laws of India. Courts of India shall have jurisdiction over any disputes.</li>
+      </ol>
+      <p style="margin-top:20px"><b>Contact:</b> <a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="index.html">← Legal home</a> · <a href="privacy.html">Privacy Policy</a> · <a href="delete.html">Delete my data</a>
+  </div>
+</div>
+<script>
+function pick(l){
+  document.querySelectorAll('[data-lang]').forEach(e=>e.classList.toggle('on', e.dataset.lang===l));
+  document.getElementById('btn-hi').classList.toggle('active', l==='hi');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+}
+</script>
+</body>
+</html>

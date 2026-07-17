@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Gate Register</title>
+<style>
+  :root{--bg:#F1F5F9;--card:#fff;--ink:#0f172a;--mut:#64748b;--brand:#6366f1;--line:#e2e8f0}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+  .wrap{max-width:780px;margin:0 auto;padding:32px 22px 80px}
+  .card{background:var(--card);border-radius:16px;padding:28px 26px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+  h1{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
+  h2{margin:28px 0 10px;font-size:17px;color:var(--brand)}
+  .meta{color:var(--mut);font-size:13px;margin-bottom:22px}
+  ul{padding-left:20px;margin:8px 0}
+  li{margin:4px 0}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .lang{display:flex;gap:8px;margin-bottom:18px}
+  .lang button{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+  .lang button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  [data-lang]{display:none}
+  [data-lang].on{display:block}
+  .foot{margin-top:36px;color:var(--mut);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Privacy Policy — Gate Register</h1>
+    <div class="meta">Last updated: 2026-07-16</div>
+
+    <div class="lang">
+      <button id="btn-hi" class="active" onclick="pick('hi')">हिंदी / Hinglish</button>
+      <button id="btn-en" onclick="pick('en')">English</button>
+    </div>
+
+    <div data-lang="hi" class="on">
+      <p>Gate Register ("app", "hum") ek society visitor management app hai. Ye policy batati hai ki hum kya data lete hain, kyun lete hain, aur usse kaise sambhalte hain.</p>
+
+      <h2>1. Jo data hum lete hain</h2>
+      <ul>
+        <li><b>Residents (flat members):</b> naam, flat number, tower, ghar mein rishta (role), WhatsApp/phone number, device push token (FCM)</li>
+        <li><b>Visitors:</b> naam (optional), photo (guard dwara khinchi gayi), mobile number (optional), gaadi number (optional), aane-jaane ka samay, kis flat mein gaye</li>
+        <li><b>Guards:</b> naam, duty shift</li>
+        <li><b>Society admins/secretaries:</b> naam, phone number, tower</li>
+      </ul>
+
+      <h2>2. Data kyun lete hain</h2>
+      <ul>
+        <li>Visitor ki suchna flat ke members tak pahunchane ke liye (ring/notification)</li>
+        <li>Society ka aane-jaane ka record rakhne ke liye (suraksha)</li>
+        <li>Society notice aur suchnayein bhejne ke liye</li>
+        <li>App ki technical functionality (push tokens) ke liye</li>
+      </ul>
+
+      <h2>3. Visitor photos</h2>
+      <p>Guard visitor ki photo isliye leta hai taaki flat ke residents pehchan sakein ki gate par kaun hai. Photo sirf us flat ke members, society admin, aur security record ko dikhti hai. Photo kisi ad network ya third party ko nahi bechi/di jaati.</p>
+
+      <h2>4. Data kahan store hota hai</h2>
+      <p>Data Google Firebase (Realtime Database, Cloud Storage, Cloud Messaging) par store hota hai. Google ki apni data protection policies lagu hoti hain.</p>
+
+      <h2>5. Data kisko dikhta hai</h2>
+      <ul>
+        <li>Flat ke members: apne flat ke visitors ka record</li>
+        <li>Security guard: sirf flat number aur visitor detail — residents ke naam/phone guard ko NAHI dikhte</li>
+        <li>Society admin: apni society ka record</li>
+        <li>Hum aapka data kisi ko bechte nahi. Ads app ke andar society admin dwara bheje jaate hain; koi third-party ad network user data collect nahi karta.</li>
+      </ul>
+
+      <h2>6. Data kab tak rehta hai</h2>
+      <p>Visitor entries society ke record ke liye rakhi jaati hain. Society admin puraani entries delete kar sakta hai. Aap apna member data kabhi bhi delete karwa sakte hain (neeche dekho).</p>
+
+      <h2>7. Aapke adhikaar — Data Delete</h2>
+      <ul>
+        <li><b>App mein:</b> Setup → "Mera data delete karo"</li>
+        <li><b>Email:</b> <a href="mailto:sandipdubey773@gmail.com?subject=Data%20Delete%20Request%20%E2%80%94%20Gate%20Register">sandipdubey773@gmail.com</a> — 7 din ke andar aapka member record, phone number aur push token delete kar diya jayega</li>
+        <li><b>Web form:</b> <a href="delete.html">delete.html</a></li>
+      </ul>
+
+      <h2>8. Bachche</h2>
+      <p>Ye app 18+ residents aur security staff ke liye hai. Hum jaan-boojh kar bachchon ka data collect nahi karte.</p>
+
+      <h2>9. Badlav</h2>
+      <p>Policy badle to app mein suchna denge.</p>
+
+      <h2>Sampark</h2>
+      <p><a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a></p>
+    </div>
+
+    <div data-lang="en">
+      <p>Gate Register ("the app", "we") is a housing-society visitor management application. This policy explains what data we collect, why, and how we handle it.</p>
+
+      <h2>1. Data we collect</h2>
+      <ul>
+        <li><b>Residents (flat members):</b> name, flat number, tower, household role, WhatsApp/phone number, device push token (FCM)</li>
+        <li><b>Visitors:</b> name (optional), photo (captured by guard), mobile number (optional), vehicle number (optional), entry/exit time, which flat visited</li>
+        <li><b>Guards:</b> name, duty shift</li>
+        <li><b>Society admins/secretaries:</b> name, phone number, tower</li>
+      </ul>
+
+      <h2>2. Why we collect it</h2>
+      <ul>
+        <li>To notify flat members of arriving visitors (ring/notification)</li>
+        <li>To maintain a society entry/exit log (security)</li>
+        <li>To send society notices and announcements</li>
+        <li>Technical app functionality (push tokens)</li>
+      </ul>
+
+      <h2>3. Visitor photos</h2>
+      <p>The guard captures a visitor photo so that flat residents can identify who is at the gate. The photo is visible only to that flat's members, the society admin, and the security log. Photos are never sold to or shared with ad networks or third parties.</p>
+
+      <h2>4. Where data is stored</h2>
+      <p>Data is stored on Google Firebase (Realtime Database, Cloud Storage, Cloud Messaging). Google's data-protection policies apply.</p>
+
+      <h2>5. Who can see the data</h2>
+      <ul>
+        <li>Flat members: their flat's visitor record</li>
+        <li>Security guard: only flat number and visitor details — residents' names/phones are NOT shown to the guard</li>
+        <li>Society admin: their society's records</li>
+        <li>We do not sell your data. Ads inside the app are sent only by the society admin; no third-party ad network collects user data.</li>
+      </ul>
+
+      <h2>6. Retention</h2>
+      <p>Visitor entries are retained for the society's security records. Society admins may delete old entries. You may request deletion of your member data at any time (see below).</p>
+
+      <h2>7. Your rights — Data Deletion</h2>
+      <ul>
+        <li><b>In-app:</b> Setup → "Delete my data"</li>
+        <li><b>Email:</b> <a href="mailto:sandipdubey773@gmail.com?subject=Data%20Delete%20Request%20%E2%80%94%20Gate%20Register">sandipdubey773@gmail.com</a> — your member record, phone number and push token will be deleted within 7 days</li>
+        <li><b>Web form:</b> <a href="delete.html">delete.html</a></li>
+      </ul>
+
+      <h2>8. Children</h2>
+      <p>This app is intended for residents and security staff aged 18+. We do not knowingly collect data from children.</p>
+
+      <h2>9. Changes</h2>
+      <p>If the policy changes, we will notify you inside the app.</p>
+
+      <h2>Contact</h2>
+      <p><a href="mailto:sandipdubey773@gmail.com">sandipdubey773@gmail.com</a></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="index.html">← Legal home</a> · <a href="terms.html">Terms of Service</a> · <a href="delete.html">Delete my data</a>
+  </div>
+</div>
+<script>
+function pick(l){
+  document.querySelectorAll('[data-lang]').forEach(e=>e.classList.toggle('on', e.dataset.lang===l));
+  document.getElementById('btn-hi').classList.toggle('active', l==='hi');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+}
+</script>
+</body>
+</html>
