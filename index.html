@@ -200,6 +200,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, remove, push, get } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 // Firebase config (same as main app)
 const app = initializeApp({
@@ -212,6 +213,9 @@ const app = initializeApp({
   appId: "1:754517313634:web:4d6cb7b3b6c3630235a93b"
 });
 const db = getDatabase(app);
+const auth = getAuth(app);
+// Anonymous auth for RTDB rules gate — fire-and-forget, koi UI block nahi
+signInAnonymously(auth).catch(err => console.error("admin anon auth failed:", err));
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
