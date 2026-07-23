@@ -145,6 +145,7 @@
   <div class="modbox">
     <h3>Nayi Society add karo</h3>
     <div class="fld"><label>Society ka Naam</label><input id="ns-name" placeholder="e.g., Swapna Sristi" /></div>
+    <div class="fld"><label>PIN (min 4 digits)</label><input id="ns-pin" type="password" inputmode="numeric" placeholder="Society join karne ke liye" maxlength="20" /></div>
     <div class="btnrow">
       <button class="btn btn-p" id="ns-save">Create</button>
       <button class="btn btn-s" id="ns-cancel">Cancel</button>
@@ -822,18 +823,21 @@ function openMod(id){ $(id).classList.add("on"); }
 function closeMod(id){ $(id).classList.remove("on"); }
 
 $("btn-newsoc").onclick = () => {
-  $("ns-name").value = "";
+  $("ns-name").value = ""; $("ns-pin").value = "";
   openMod("mod-newsoc");
   setTimeout(()=>$("ns-name").focus(), 50);
 };
 $("ns-cancel").onclick = () => closeMod("mod-newsoc");
 $("ns-save").onclick = async () => {
   const name = $("ns-name").value.trim();
+  const pin = $("ns-pin").value.trim();
   if(!name) return toast("Naam likho","err");
+  if(pin.length < 4) return toast("PIN kam se kam 4 digits ka do","err");
   const id = name.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
   if(allSocieties[id]) return toast("Yeh society pehle se hai","err");
   try{
-    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [] });
+    const pinHash = await sha256hex(id + ":" + pin);
+    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [], pinHash });
     closeMod("mod-newsoc");
     toast("Society create ho gayi","ok");
     selectSociety(id);
