@@ -39,6 +39,9 @@
   .socrow.active{background:var(--panel2); border-color:var(--brand)}
   .socrow .nm{font-weight:600; font-size:13px}
   .socrow .cnt{font-size:10px; color:var(--dim); font-family:var(--mono)}
+  .socrow .delbtn{background:none; border:none; cursor:pointer; font-size:14px; opacity:0.4; padding:4px 6px; border-radius:4px; flex-shrink:0}
+  .socrow:hover .delbtn{opacity:0.8}
+  .socrow .delbtn:hover{background:var(--danger); opacity:1}
   .sb .foot{border-top:1px solid var(--border); padding-top:10px; font-size:11px; color:var(--mut); font-family:var(--mono)}
   .sb .foot button{background:none; border:none; color:var(--dim); cursor:pointer; font-size:11px; padding:2px 0}
 
@@ -350,7 +353,17 @@ function renderSidebar(){
     const entries = Object.keys(s.entries || {}).length;
     const row = document.createElement("div");
     row.className = "socrow" + (id === currentSocId ? " active" : "");
-    row.innerHTML = `<div><div class="nm">${esc(nm)}</div><div class="cnt">${flatCount} flats · ${memberCount} members · ${entries} entries</div></div>`;
+    row.innerHTML = `<div><div class="nm">${esc(nm)}</div><div class="cnt">${flatCount} flats · ${memberCount} members · ${entries} entries</div></div><button class="delbtn" title="Delete">🗑</button>`;
+    row.querySelector(".delbtn").onclick = async (e) => {
+      e.stopPropagation();
+      if(!confirm(`"${nm}" society POORI delete karo?\n\nSab flats, members, entries hamesha ke liye hat jayenge.`)) return;
+      if(!confirm("Pakka? Wapas nahi hoga.")) return;
+      try{
+        await remove(ref(db, `societies/${id}`));
+        if(currentSocId === id){ currentSocId = null; currentSocData = {}; renderMain(); }
+        toast("Society delete ho gayi","ok");
+      }catch(e){ toast("Fail: "+e.message,"err"); }
+    };
     row.onclick = () => selectSociety(id);
     list.appendChild(row);
   });
