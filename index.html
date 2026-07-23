@@ -144,10 +144,7 @@
 <div class="mod" id="mod-newsoc">
   <div class="modbox">
     <h3>Nayi Society add karo</h3>
-    <p>Society ID unique hona chahiye (e.g., <code>greenmeadows</code>). Baad mein change nahi ho sakti.</p>
-    <div class="fld"><label>Society ID</label><input id="ns-id" placeholder="e.g., silverpark" /></div>
-    <div class="fld"><label>Naam</label><input id="ns-name" placeholder="e.g., Silver Park Apartments" /></div>
-    <div class="fld"><label>Gate</label><input id="ns-gate" placeholder="e.g., Gate 1" /></div>
+    <div class="fld"><label>Society ka Naam</label><input id="ns-name" placeholder="e.g., Swapna Sristi" /></div>
     <div class="btnrow">
       <button class="btn btn-p" id="ns-save">Create</button>
       <button class="btn btn-s" id="ns-cancel">Cancel</button>
@@ -825,19 +822,18 @@ function openMod(id){ $(id).classList.add("on"); }
 function closeMod(id){ $(id).classList.remove("on"); }
 
 $("btn-newsoc").onclick = () => {
-  $("ns-id").value = ""; $("ns-name").value = ""; $("ns-gate").value = "Gate 1";
+  $("ns-name").value = "";
   openMod("mod-newsoc");
-  setTimeout(()=>$("ns-id").focus(), 50);
+  setTimeout(()=>$("ns-name").focus(), 50);
 };
 $("ns-cancel").onclick = () => closeMod("mod-newsoc");
 $("ns-save").onclick = async () => {
-  const id = $("ns-id").value.trim().toLowerCase().replace(/[^a-z0-9-]/g,"");
   const name = $("ns-name").value.trim();
-  const gate = $("ns-gate").value.trim() || "Gate 1";
-  if(!id || !name) return toast("ID aur Naam zaruri hain","err");
-  if(allSocieties[id]) return toast("Yeh ID pehle se hai","err");
+  if(!name) return toast("Naam likho","err");
+  const id = name.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+  if(allSocieties[id]) return toast("Yeh society pehle se hai","err");
   try{
-    await set(ref(db, `societies/${id}/config`), { name, gate, towers: [] });
+    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [] });
     closeMod("mod-newsoc");
     toast("Society create ho gayi","ok");
     selectSociety(id);
