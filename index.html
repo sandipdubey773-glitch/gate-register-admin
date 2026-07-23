@@ -353,7 +353,8 @@ function renderSidebar(){
     const entries = Object.keys(s.entries || {}).length;
     const row = document.createElement("div");
     row.className = "socrow" + (id === currentSocId ? " active" : "");
-    row.innerHTML = `<div><div class="nm">${esc(nm)}</div><div class="cnt">${flatCount} flats · ${memberCount} members · ${entries} entries</div></div><button class="delbtn" title="Delete">🗑</button>`;
+    const pinTxt = cfg.plainPin ? ` · PIN: ${esc(cfg.plainPin)}` : (cfg.pinHash ? ' · PIN: set' : ' · PIN: nahi');
+    row.innerHTML = `<div><div class="nm">${esc(nm)}</div><div class="cnt">${flatCount} flats · ${memberCount} members · ${entries} entries${pinTxt}</div></div><button class="delbtn" title="Delete">🗑</button>`;
     row.querySelector(".delbtn").onclick = async (e) => {
       e.stopPropagation();
       if(!confirm(`"${nm}" society POORI delete karo?\n\nSab flats, members, entries hamesha ke liye hat jayenge.`)) return;
@@ -516,7 +517,7 @@ function renderConfig(body){
       </div>
     </div>
     <div class="card">
-      <h3>Society PIN ${hasPin ? '<span class="badge b-ok">SET</span>' : '<span class="badge b-mut">NOT SET</span>'}</h3>
+      <h3>Society PIN ${hasPin ? '<span class="badge b-ok">SET</span>' : '<span class="badge b-mut">NOT SET</span>'} ${cfg.plainPin ? `<span style="font-size:13px; font-weight:400; color:var(--dim)">— abhi: <b style="color:var(--ink)">${esc(cfg.plainPin)}</b></span>` : ''}</h3>
       <div style="font-size:12px; color:var(--mut); margin-bottom:10px">Admin sirf apni marzi se PIN reset kar sakta hai — purani PIN nahi chahiye. Set karne ke baad sab residents ko naya PIN batao.</div>
       <div class="grow">
         <div class="fld"><label>Nayi PIN (min 4 chars)</label><input id="cf-newpin" type="text" placeholder="jaise 4826" maxlength="20" autocomplete="off" /></div>
@@ -562,6 +563,7 @@ function renderConfig(body){
     try{
       const hex = await sha256hex(currentSocId + ":" + pin);
       await set(ref(db, `societies/${currentSocId}/config/pinHash`), hex);
+      await set(ref(db, `societies/${currentSocId}/config/plainPin`), pin);
       $("cf-newpin").value = "";
       toast("PIN save ho gaya", "ok");
     }catch(err){ toast("Fail: "+err.message, "err"); }
@@ -850,7 +852,7 @@ $("ns-save").onclick = async () => {
   if(allSocieties[id]) return toast("Yeh society pehle se hai","err");
   try{
     const pinHash = await sha256hex(id + ":" + pin);
-    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [], pinHash });
+    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [], pinHash, plainPin: pin });
     closeMod("mod-newsoc");
     toast("Society create ho gayi","ok");
     selectSociety(id);
