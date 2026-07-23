@@ -852,7 +852,7 @@ $("ns-save").onclick = async () => {
   if(allSocieties[id]) return toast("Yeh society pehle se hai","err");
   try{
     const pinHash = await sha256hex(id + ":" + pin);
-    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", towers: [], pinHash, plainPin: pin });
+    await set(ref(db, `societies/${id}/config`), { name, gate: "Main Gate", pinHash, plainPin: pin });
     closeMod("mod-newsoc");
     toast("Society create ho gayi","ok");
     selectSociety(id);
