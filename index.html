@@ -701,9 +701,15 @@ function renderFlats(body){
       let mHtml = '';
       mList.forEach(([mid, m]) => {
         if(!m) return;
-        const tok = m.fcmToken ? '<span class="badge b-ok">TOKEN</span>' : '<span class="badge b-mut">no token</span>';
-        mHtml += `<div class="flex" style="padding:4px 0; border-top:1px dashed var(--panel2)">
-          <span class="grow2"><b>${esc(m.name||'?')}</b> <span style="color:var(--mut)">· ${esc(m.role||'')}</span> ${tok}</span>
+        const loginBadge = m.fcmToken
+          ? '<span class="badge b-ok">✓ Login</span>'
+          : '<span class="badge b-mut">⏳ Login pending</span>';
+        const phoneTxt = m.phone ? `<span style="color:var(--dim); font-size:11px">📱 ${esc(m.phone)}</span>` : '';
+        mHtml += `<div class="flex" style="padding:6px 0; border-top:1px dashed var(--panel2); gap:6px; flex-wrap:wrap; align-items:center">
+          <span class="grow2">
+            <b>${esc(m.name||'?')}</b> <span style="color:var(--mut)">· ${esc(m.role||'')}</span>
+            ${loginBadge} ${phoneTxt}
+          </span>
           <button class="btn btn-d" data-del-mem="${esc(tower)}|${esc(f)}|${esc(mid)}">Del</button>
         </div>`;
       });
