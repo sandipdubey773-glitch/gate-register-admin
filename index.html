@@ -645,7 +645,7 @@ function renderSecretariesList(){
         await set(ref(db, `societies/${currentSocId}/towerInvites/${code}`), {
           tower: tw, active: true, createdBy: "admin", createdAt: Date.now()
         });
-        const link = "https://gate-register.app/t/"+currentSocId+"/"+code;
+        const link = "https://sandipdubey773-glitch.github.io/gate-register-admin/join.html?ts="+currentSocId+"&tj="+code;
         const msg = `Namaste ${nm} ji! 🙏\n\nAapko *${socName}* ke Tower ${tw} ka secretary banaya gaya hai — Gate Register app mein.\n\nAap kar sakte ho:\n• Apne tower ke sab flat holders ko ek link se jodna\n• Apne tower ko notice bhejna\n\nApp kholo, apna flat register karo — aapko '🏛 Tower' tab mil jayega.\n\nTower invite link (residents ke liye):\n${link}`;
         const url = "https://wa.me/91"+ph+"?text="+encodeURIComponent(msg);
         try{ window.open(url, "_blank"); }catch(_){}

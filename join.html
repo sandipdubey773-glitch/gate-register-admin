@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Gate Register — Tower Join</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+  .logo{font-size:28px;font-weight:900;color:#1a3c2e;letter-spacing:-.03em;margin-bottom:4px}.logo span{color:#10b981}
+  .sub{font-size:13px;color:#64748b;margin-bottom:24px}
+  .card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#16a34a;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:16px}
+  h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:6px}
+  .desc{font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5}
+  label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:14px}
+  input{width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s}
+  input:focus{border-color:#10b981}
+  .btn{width:100%;margin-top:20px;padding:15px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:disabled{background:#94a3b8;cursor:not-allowed}
+  .err{color:#dc2626;font-size:12px;margin-top:8px;min-height:16px}
+  .success{display:none;text-align:center;padding:20px 0}
+  .success-icon{font-size:56px;margin-bottom:12px}
+  .success-title{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px}
+  .success-desc{font-size:14px;color:#64748b;line-height:1.6}
+  .loading{text-align:center;padding:30px 0;color:#64748b;font-size:14px}
+  .tower-pill{display:inline-block;background:#ede9fe;color:#6d28d9;font-weight:700;padding:3px 10px;border-radius:8px;font-size:13px}
+  .roles{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .roles button{padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;cursor:pointer;font-family:inherit}
+  .roles button.on{background:#1a3c2e;color:#fff;border-color:#1a3c2e}
+</style>
+</head>
+<body>
+<div class="logo">Gate<span>Register</span></div>
+<div class="sub">Society visitor management</div>
+<div class="card" id="main-card">
+  <div class="loading" id="loading">Link verify ho raha hai...</div>
+  <div id="form-area" style="display:none">
+    <div class="badge">Tower Join</div>
+    <h2 id="soc-name">—</h2>
+    <div class="desc">Aap <span class="tower-pill" id="tower-name">—</span> mein apna flat register kar rahe ho.</div>
+    <label>Aapka naam</label>
+    <input id="inp-name" placeholder="Jaise: Ramesh Sharma" maxlength="40" />
+    <label>Flat number</label>
+    <input id="inp-flat" placeholder="Jaise: A-101" maxlength="16" />
+    <label>Mobile number</label>
+    <input id="inp-phone" type="tel" inputmode="numeric" placeholder="10 digit number" maxlength="10" />
+    <label>Aap kaun ho</label>
+    <div class="roles" id="role-btns">
+      <button data-r="Papa">Papa</button><button data-r="Mummy">Mummy</button>
+      <button data-r="Beta">Beta</button><button data-r="Beti">Beti</button>
+      <button data-r="Dada ji">Dada ji</button><button data-r="Dadi ji">Dadi ji</button>
+      <button data-r="Bhaiya">Bhaiya</button><button data-r="Didi">Didi</button>
+    </div>
+    <input id="role-custom" placeholder="Ya khud likho" maxlength="20" style="margin-top:8px" />
+    <div class="err" id="err"></div>
+    <button class="btn" id="btn-register">Register karo</button>
+  </div>
+  <div id="err-area" style="display:none;text-align:center;padding:20px 0">
+    <div style="font-size:40px;margin-bottom:12px">❌</div>
+    <div style="font-weight:800;color:#dc2626;margin-bottom:8px">Link kaam nahi kar raha</div>
+    <div style="font-size:13px;color:#64748b">Admin se nayi invite link maango.</div>
+  </div>
+  <div class="success" id="success">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Register ho gaye!</div>
+    <div class="success-desc">Ab Gate Register app install karo aur apni society select karo — aapka flat registered hai.</div>
+  </div>
+</div>
+<script>
+const DB="https://gate-register-332c5-default-rtdb.firebaseio.com";
+const p=new URLSearchParams(location.search);
+const tj=p.get("tj"),ts=p.get("ts");
+let towerName="",socId="";
+let selectedRole="Ghar wale";
+
+async function init(){
+  if(!tj||!ts){showErr();return;}
+  socId=ts;
+  try{
+    const inv=await fetch(DB+"/societies/"+ts+"/towerInvites/"+tj+".json").then(r=>r.json());
+    if(!inv||!inv.active){showErr();return;}
+    towerName=inv.tower;
+    const cfg=await fetch(DB+"/societies/"+ts+"/config.json").then(r=>r.json());
+    const socName=(cfg&&cfg.name)?cfg.name:ts;
+    document.getElementById("soc-name").textContent=socName;
+    document.getElementById("tower-name").textContent="Tower "+towerName;
+    document.getElementById("inp-flat").value=towerName+"-";
+    document.getElementById("loading").style.display="none";
+    document.getElementById("form-area").style.display="block";
+  }catch(e){showErr();}
+}
+function showErr(){
+  document.getElementById("loading").style.display="none";
+  document.getElementById("err-area").style.display="block";
+}
+document.getElementById("role-btns").addEventListener("click",e=>{
+  const b=e.target.closest("[data-r]");if(!b)return;
+  document.querySelectorAll(".roles button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");selectedRole=b.dataset.r;
+});
+document.getElementById("btn-register").onclick=async()=>{
+  const name=document.getElementById("inp-name").value.trim();
+  let flat=document.getElementById("inp-flat").value.trim().toUpperCase();
+  const phone=document.getElementById("inp-phone").value.trim().replace(/\D/g,"");
+  const role=document.getElementById("role-custom").value.trim()||selectedRole;
+  const err=document.getElementById("err");
+  if(!name){err.textContent="Naam likho";return;}
+  if(!flat||flat.length<3){err.textContent="Flat number likho";return;}
+  if(phone.length!==10){err.textContent="10 digit mobile number chahiye";return;}
+  if(!flat.startsWith(towerName+"-"))flat=towerName+"-"+flat.replace(/^[A-Za-z]-?/,"");
+  err.textContent="";
+  const btn=document.getElementById("btn-register");
+  btn.disabled=true;btn.textContent="Register ho raha hai...";
+  try{
+    const mid="web-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    await fetch(DB+"/societies/"+socId+"/flats/"+towerName+"/"+flat+"/members/"+mid+".json",{
+      method:"PUT",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,role,phone:"+91 "+phone,flat,joinedAt:Date.now(),source:"tower-invite",inviteCode:tj})
+    });
+    document.getElementById("form-area").style.display="none";
+    document.getElementById("success").style.display="block";
+  }catch(e){err.textContent="Error: "+e.message;btn.disabled=false;btn.textContent="Register karo";}
+};
+init();
+</script>
+</body>
+</html>
